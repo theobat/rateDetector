@@ -11,49 +11,36 @@ class MyDaemon(Daemon):
     payload = {
     'calculatorView': 1, 
     'lang': 'en', 
-    'invertSavings' : 5000,
     'fixType': 'SOURCE',
     'hideSavings': 'true',
     'signup': 'true',
-    'fromCalcWidget': 'true',
-    'sourceValue': 5000,
-    'sourceCurrencyId': 3,
-    'targetValue': 41.19,
-    'targetCurrencyId': 1,
-    'p.sourceCurrency': 'GBP',
-    'p.targetCurrency': 'EUR',
-    'p.sourceAmount': 3000,
     'p.fromCalcWidget': 'true',
-    'p.sourceCurrency': 'USD',
-    'p.targetCurrency': 'EUR',
     'p.sourceAmount': 5000,
-    'p.fromCalcWidget': 'true',
-    'p.sourceCurrency': 'USD',
-    'p.targetCurrency': 'EUR',
-    'p.sourceAmount': 5000,
-    'p.fromCalcWidget': 'true'
     }
-
-    def startCollection(self):
+# 3 = USD / 1 = EUR / 2 = GBP
+    def startCollection(self,amount,sourceCurrency=3,targetCurrency=1):
         status = 200
         start = datetime.datetime.now()
         while status == 200 :
             time.sleep(2)
             now = datetime.datetime.now()
             delta = now-start
+            self.payload["sourceValue"] = amount
+            self.payload["sourceCurrencyId"] = sourceCurrency
+            self.payload["targetCurrencyId"] = targetCurrency
             r = requests.post(self.url, data=self.payload)
             status = r.status_code
             rj = json.loads(r.text)
             euro = float(str.replace(rj['targetValue'],',',''))
             doll = float(str.replace(rj['sourceValue'],',',''))
-            print(euro,doll)
+            print(euro,rj['fee'])
             print(euro/doll,delta)
     def run(self):
         self.startCollection()
 
 if __name__ == "__main__":
     daemon = MyDaemon('/tmp/daemon-example.pid')
-    daemon.startCollection()
+    daemon.startCollection(5000)
     if len(sys.argv) == 2:
             if 'start' == sys.argv[1]:
                     daemon.start()
